@@ -10,6 +10,8 @@ ChessboardData.NODE_IS_WHITE  = 1
 ChessboardData.NODE_IS_BLACK  = -1
 ChessboardData.NODE_IS_EMPTY  = 0
 
+ChessboardData.win_game_handler = {}
+
 function ChessboardData:ctor()
     self.boardMap = {}
     self.boardMap[1] = {
@@ -50,22 +52,21 @@ function ChessboardData:moveInChessOn(ui_row, ui_col, isWhite)
     -- validate dataGridY or dataGridX check
     if (dataGridY > self.boardMap[1].rows) or (dataGridX > self.boardMap[1].cols) or (dataGridY < 1) or (dataGridX < 1) then
         echoInfo("Invalid dataGridY:%d or dataGridX:%d", dataGridY, dataGridX)
-        return
+        return false;
     end
 
     -- check if there is a chess already
     if grid[dataGridX][dataGridY] ~= ChessboardData.NODE_IS_EMPTY then
         echoInfo("grid already has chess on , chess value is %d", grid[dataGridX][dataGridY])
-        return
+        return false;
     end
 
     if Order.value == Order.whiteOrder then
         grid[dataGridX][dataGridY] = ChessboardData.NODE_IS_WHITE
-        self:checkLogic(dataGridX, dataGridY)
     elseif Order.value == Order.blackOrder then
         grid[dataGridX][dataGridY] = ChessboardData.NODE_IS_BLACK
-        self:checkLogic(dataGridX, dataGridY)
     end
+    return self:checkLogic(dataGridX, dataGridY)
 end
 
 function ChessboardData:checkLogic(dataGridX, dataGridY)
@@ -93,25 +94,25 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
     local checkIncrementLB2RT = accp:new(1, -1) --从左下到右上的检查棋子位置增量
 
 
-    local asd = accp:new(2,2)
-    local sdf = accp:new(11,11)
-    local step = accp:new(1,1)
+    -- local asd = accp:new(2,2)
+    -- local sdf = accp:new(11,11)
+    -- local step = accp:new(1,1)
 
-    local qwe = asd
-    repeat
-        print("(" .. qwe.x .. "," .. qwe.y .. ")")
-        qwe = qwe + step
-    until qwe == sdf
-    local dfg = asd + sdf
-    print("(" .. dfg.x .. "," .. dfg.y .. ")")
+    -- local qwe = asd
+    -- repeat
+    --     print("(" .. qwe.x .. "," .. qwe.y .. ")")
+    --     qwe = qwe + step
+    -- until qwe == sdf
+    -- local dfg = asd + sdf
+    -- print("(" .. dfg.x .. "," .. dfg.y .. ")")
 
     local formatter = ""
     for tmp_r=1,17 do
         local one_row = ""
         for tmp_col=1,17 do
-            one_row = one_row..formatter.format(grid[tmp_r][tmp_col]) .." "
+            one_row = one_row..string.format("%2d", grid[tmp_r][tmp_col])
         end
-        print(one_row)
+        echoInfo(one_row)
     end
 
     -- 从上至下进行检查
@@ -124,10 +125,14 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
                 end
                 sum = sum + grid[c][dataGridY]
             end
-            echoInfo("sum == %d", sum)
             if math.abs(sum) == SERIAL_NUM_TO_WIN then
+                -- winner_pieces = {}
+                -- -- 将赢得此局的五颗子放入参数
+                -- for j=1, SERIAL_NUM_TO_WIN do
+                --     winner_pieces[j] = ccp(i + j - 1, dataGridY)
+                -- end
                 self:win(chessVal) -- 游戏结束 Game end
-                return
+                return true
             end
         end
     end
@@ -142,10 +147,9 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
                 end
                 sum = sum + grid[dataGridX][c]
             end
-            echoInfo("sum == %d", sum)
             if math.abs(sum) == SERIAL_NUM_TO_WIN then
                 self:win(chessVal) -- 游戏结束 Game end
-                return
+                return true
             end
         end
     end
@@ -158,7 +162,6 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
             local cpCurCur = clone(checkPointCur)
             repeat
                 if grid[cpCurCur.x] ~= nil and grid[cpCurCur.x][cpCurCur.y] ~= nil then
-                    echoInfo("grid[%d][%d] == %d", cpCurCur.x, cpCurCur.y, grid[cpCurCur.x][cpCurCur.y])
                     sum = sum + grid[cpCurCur.x][cpCurCur.y]
                 end
                 cpCurCur = cpCurCur + checkIncrementLT2RB
@@ -168,7 +171,7 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
 
             if math.abs(sum) == SERIAL_NUM_TO_WIN then
                 self:win(chessVal) -- 游戏结束 Game end
-                return
+                return true
             end
         end
         checkPointCur = checkPointCur + checkIncrementLT2RB
@@ -182,7 +185,6 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
             local cpCurCur = clone(checkPointCur)
             repeat
                 if grid[cpCurCur.x] ~= nil and grid[cpCurCur.x][cpCurCur.y] ~= nil then
-                    echoInfo("grid[%d][%d] == %d", cpCurCur.x, cpCurCur.y, grid[cpCurCur.x][cpCurCur.y])
                     sum = sum + grid[cpCurCur.x][cpCurCur.y]
                 end
                 cpCurCur = cpCurCur + checkIncrementLB2RT
@@ -192,11 +194,13 @@ function ChessboardData:checkLogic(dataGridX, dataGridY)
 
             if math.abs(sum) == SERIAL_NUM_TO_WIN then
                 self:win(chessVal) -- 游戏结束 Game end
-                return
+                return true
             end
         end
         checkPointCur = checkPointCur + checkIncrementLB2RT
     until checkPointCur.x > dataGridX and checkPointCur.y < dataGridY
+
+    return false
 end
 
 -- 游戏胜利
@@ -208,6 +212,11 @@ function ChessboardData:win(chessVal)
         echoInfo("Black win")
         CCMessageBox("Black Win", "我淫了")
     end
+end
+
+
+function ChessboardData:addGameOverHandler(handler)
+    self.win_game_handler[handler] = handler
 end
 
 

@@ -1,4 +1,4 @@
--- require("mobdebug.mobdebug").start()
+require("mobdebug.mobdebug").start()
 
 function __G__TRACKBACK__(errorMessage)
     print("----------------------------------------")

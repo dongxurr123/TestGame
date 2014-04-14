@@ -18,6 +18,8 @@ ChessboardLayer.blackChessGID = 0
 ChessboardLayer.logicData = nil
 
 function ChessboardLayer:ctor()
+    -- 增加事件支持
+    cc.GameObject.extend(self):addComponent("components.behavior.EventProtocol"):exportMethods()
     self.tmxNode = CCTMXTiledMap:create(CHESSBOARD_TMX_FILENAME)
     local tmxSize = self.tmxNode:getContentSize()
     local tmxHeight = tmxSize.height
@@ -27,6 +29,7 @@ function ChessboardLayer:ctor()
     self.whiteChessGID = pieceTMXLayer:tileGIDAt(WHITE_CHESS_TMX_POINT)
     self.blackChessGID = pieceTMXLayer:tileGIDAt(BLACK_CHESS_TMX_POINT)
 
+    -- 初始化逻辑层
     self.logicData = ChessboardData:new()
 
     self.scaler = display.height / tmxHeight
@@ -42,10 +45,10 @@ function ChessboardLayer:ctor()
     local count = 1
     local isMoved = false
     local canMove = false
-    local shor_move_power_2 = SHORT_MOVE_AS_CLICK_LEN^2
+    local short_move_power_2 = SHORT_MOVE_AS_CLICK_LEN^2
 
 	local function onTouchEvent(eventType, points)
-        if #points/3 == 1 then
+        if #points == 3 then
             local x = points[1]
             local y = points[2]
             local touchId = points[3]
@@ -59,11 +62,12 @@ function ChessboardLayer:ctor()
                 local diffY = y - prev.y
                 local diffLen = diffX^2 + diffY^2
                 --当移动大于SHORT_MOVE_AS_CLICK_LEN值时才当做移动处理
-                if canMove or diffLen > shor_move_power_2 then
+                if canMove or diffLen > short_move_power_2 then
                     canMove = true
                     local node  = self:getChildByTag(tmxChessBoardTag)
                     local nodeX  = node:getPositionX()
                     local nodeY  = node:getPositionY()
+                    -- echoInfo("nodeX==%d, nodeY==%d, diffX==%d, diffY==%d", nodeX, nodeY, diffX, diffY)
 
                     node:setPosition( ccpAdd(ccp(nodeX, nodeY), ccp(diffX, diffY)) )
                     prev.x = x
@@ -86,6 +90,7 @@ function ChessboardLayer:ctor()
     self:setTouchMode(kCCTouchesAllAtOnce)
     self:addTouchEventListener(onTouchEvent, true) -- Multi touch
     --self:registerScriptTouchHandler(onTouchEvent) -- Single touch
+    self:setNodeEventEnabled(true)
 end
 
 
@@ -97,6 +102,11 @@ function ChessboardLayer:moveInChessOnPoint(tmxPoint, isWhite)
         or (tmxPoint.y > chessboardSize.cols - 1) or (tmxPoint.y < 0) then
         return
     end
+    if ( pieceTMXLayer:tileGIDAt(tmxPoint) ~= 0 ) then
+        echoInfo("A chess piece on this position:(%d, %d)", tmxPoint.x, tmxPoint.y)
+        return 
+    end
+
     if Order.value == Order.whiteOrder then
         pieceTMXLayer:setTileGID(self.whiteChessGID, tmxPoint)
     elseif Order.value == Order.blackOrder then
@@ -104,8 +114,15 @@ function ChessboardLayer:moveInChessOnPoint(tmxPoint, isWhite)
     else
         echoError("Unkown piece: %d", Order.value)
     end
-    self.logicData:moveInChessOn(tmxPoint.x, tmxPoint.y)
+    local isGameComplete = self.logicData:moveInChessOn(tmxPoint.x, tmxPoint.y)
+    if isGameComplete then
+        self:setTouchEnabled(false)
+        self:dispatchEvent({name = "GAME_COMPLETED", arg = "wahaha"})
+    end
     Order:switchOrder()
+end
+
+function ChessboardLayer:onGameComplete()
 end
 
 
