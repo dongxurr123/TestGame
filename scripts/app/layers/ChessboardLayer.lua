@@ -9,13 +9,15 @@ end)
 local tmxChessBoardTag = 1
 
 ChessboardLayer.tmxNode = nil
-ChessboardLayer.scaler = 1.0
+ChessboardLayer.scaler_point = 1
 ChessboardLayer.offset = { x=0, y=0 }
 
 ChessboardLayer.whiteChessGID = 0
 ChessboardLayer.blackChessGID = 0
 
 ChessboardLayer.logicData = nil
+
+ChessboardLayer.scaler_list = {}
 
 function ChessboardLayer:ctor()
     -- 增加事件支持
@@ -35,11 +37,38 @@ function ChessboardLayer:ctor()
     self.scaler = display.height / tmxHeight
     self.tmxNode:setScale(self.scaler)
 
+    self.scaler_list[1] = self.scaler
+    self.scaler_list[2] = self.scaler + 0.2
+    self.scaler_list[3] = self.scaler + 0.3
+    self.scaler_list[4] = self.scaler + 0.4
+
     self.offset.x = display.left + ((display.width - tmxWidth * self.scaler)/2)
     self.offset.y = 0
     self.tmxNode:setPosition(ccp(self.offset.x, self.offset.y))
-
+    -- 添加tmx地图精灵
     self:addChild(self.tmxNode, 0, tmxChessBoardTag)
+
+    -- 添加缩放菜单
+    local zoom_up_button = ui.newTTFLabelMenuItem({
+        text = "放大",
+        x = display.right - 100,
+        y = display.bottom + 120,
+        -- sound = GAME_SFX.backButton,
+        listener = function()
+            self:zoomUp()
+        end,
+    })
+    local zoom_down_button = ui.newTTFLabelMenuItem({
+        text = "缩小",
+        x = display.right - 100,
+        y = display.bottom + 80,
+        -- sound = GAME_SFX.backButton,
+        listener = function()
+            self:zoomDown()
+        end,
+    })
+    local menu = ui.newMenu({zoom_up_button, zoom_down_button})
+    self:addChild(menu)
 
 	local prev = {x = 0, y = 0}
     local count = 1
@@ -135,7 +164,26 @@ function ChessboardLayer:tilePosFromLocation(pointX, pointY)
     return ccp(rx, ry)
 end
 
+function ChessboardLayer:zoomUp()
+    if self.scaler_point >= #self.scaler_list then
+        self.scaler_point = #self.scaler_list
+    else
+        self.scaler_point = self.scaler_point + 1
+    end
+    self:zoomByScaler(self.scaler_list[self.scaler_point])
+end
+
+function ChessboardLayer:zoomDown()
+    if self.scaler_point <= 1 then
+        self.scaler_point = 1
+    else
+        self.scaler_point = self.scaler_point - 1
+    end
+    self:zoomByScaler(self.scaler_list[self.scaler_point])
+end
+
 function ChessboardLayer:zoomByScaler(scaler)
+    audio.playSound(GAME_SFX.tapButton)
     self.scaler = scaler
     self.tmxNode:setScale(self.scaler)
 end

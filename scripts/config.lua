@@ -32,3 +32,11 @@ SCALER_S_SCALER = {1.0, 1.2, 1.4, 1.6, 1.8, 2.0} --用户自定义的缩放比�
 SERIAL_NUM_TO_WIN = 5 --连续多少颗相同的棋子结束游戏（五子棋当然是五颗了，放config里边说明你有强迫症）
 
 SHORT_MOVE_AS_CLICK_LEN = 32 -- 小于该值得短暂的移动只作为点击事件
+
+-- sounds
+GAME_SFX = {
+    tapButton      = "sfx/TapButtonSound.mp3",
+    backButton     = "sfx/BackButtonSound.mp3",
+    flipCoin       = "sfx/ConFlipSound.mp3",
+    levelCompleted = "sfx/LevelWinSound.mp3",
+}

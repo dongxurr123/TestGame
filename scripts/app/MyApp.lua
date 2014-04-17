@@ -13,7 +13,13 @@ end
 
 function MyApp:run()
     CCFileUtils:sharedFileUtils():addSearchPath("res/")
+    --加载纹理图片
     display.addSpriteFramesWithFile(GAME_TEXTURE_DATA_FILENAME, GAME_TEXTURE_IMAGE_FILENAME)
+
+    --加载音效
+    for k, v in pairs(GAME_SFX) do
+        audio.preloadSound(v)
+    end
     self:enterMenuScene()
 end
 

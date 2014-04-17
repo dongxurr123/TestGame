@@ -1,5 +1,5 @@
 
-local ChessboardLayer = import(".ChessboardLayer")
+local ChessboardLayer = import("..layers.ChessboardLayer")
 
 local GameScene = class("GameScene", function()
     return display.newScene("GameScene")
@@ -37,6 +37,9 @@ function GameScene:ctor()
         end, 0.5)
     end
     self.chessboardLayer:addTo(self, self.chessboardLayerZorder, self.chessboardLayerTag)
+
+    
+    
     echoInfo("GameScene ctor end")
 end
 

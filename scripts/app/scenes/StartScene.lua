@@ -52,7 +52,10 @@ function StartScene:onEnter()
             -- keypad layer, for android
             local layer = display.newLayer()
             layer:addKeypadEventListener(function(event)
-                if event == "back" then app.exit() end
+                if event == "back" then 
+                    audio.playSound(GAME_SFX.backButton)
+                    app.exit() 
+                end
             end)
             self:addChild(layer)
 
